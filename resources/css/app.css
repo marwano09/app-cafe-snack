@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* عناصر مساعدة */
+.card { @apply bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4; }
+.btn  { @apply inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800; }
+.btn-primary { @apply bg-black text-white hover:opacity-90 border-black; }
+.input { @apply w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 outline-none; }
+.label { @apply text-sm text-neutral-600 dark:text-neutral-300; }
