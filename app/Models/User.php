@@ -2,29 +2,33 @@
 
 namespace App\Models;
 
-use App\Models\Order;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Order;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
-     * Mass assignable attributes.
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
-        'username',   // added for manager-created accounts
+        'username', // for manager-created accounts
         'email',
         'password',
     ];
 
     /**
-     * Attributes hidden for arrays / JSON.
+     * The attributes that should be hidden for arrays and JSON.
+     *
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -32,7 +36,9 @@ class User extends Authenticatable
     ];
 
     /**
-     * Attribute casting.
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
      */
     protected function casts(): array
     {
@@ -43,7 +49,9 @@ class User extends Authenticatable
     }
 
     /**
-     * Waiter -> Orders relationship.
+     * Get all orders created by this user (waiter).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function orders()
     {

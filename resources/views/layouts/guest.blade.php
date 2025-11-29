@@ -12,7 +12,7 @@
     @yield('content')
   </main>
   <footer class="text-center text-xs opacity-70 py-4">
-    M AND Y {{ now()->year }}
+    golden pool  {{ now()->year }}
   </footer>
 </body>
 </html>

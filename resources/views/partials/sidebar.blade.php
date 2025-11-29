@@ -16,9 +16,9 @@
 
   // brand image fallback
   $brand = null;
-  if (file_exists(public_path('brand/goldenpool-logo.jpg')))      $brand = '/brand/goldenpool-logo.jpg';
-  elseif (file_exists(public_path('brand/goldenpool-logo.png')))  $brand = '/brand/goldenpool-logo.png';
-  elseif (file_exists(public_path('brand/cafesnack-logo.svg')))   $brand = '/brand/cafesnack-logo.svg';
+  if (file_exists(public_path('images/goldenpool-logo.jpg')))      $brand = 'public/images/goldenpool-logo.jpg';
+  elseif (file_exists(public_path('images/goldenpool-logo.jpg')))  $brand = 'public/images/goldenpool-logo.jpg';
+  elseif (file_exists(public_path('images/goldenpool-logo.jpg')))   $brand = 'public/images/goldenpool-logo.jpg';
 @endphp
 
 {{-- mobile backdrop --}}
@@ -39,7 +39,8 @@
     <div class="px-4 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
       <div class="flex items-center gap-3 min-w-0">
         @if($brand)
-          <img src="{{ $brand }}" class="h-10 w-10 rounded-lg object-cover ring-1 ring-black/10" alt="Logo">
+         <img src="{{ asset('images/goldenpool-logo.jpg') }}" alt="Golden Pool Academy" class="h-8 w-auto">
+
         @else
           <div class="h-10 w-10 rounded-lg grid place-items-center bg-black text-white text-sm font-bold">C&S</div>
         @endif
@@ -62,6 +63,12 @@
     <nav class="p-3 overflow-y-auto flex-1 space-y-1" aria-label="Main">
       {{-- Section: general --}}
       <div class="px-2 text-[11px] uppercase tracking-wider opacity-60">عام</div>
+<a href="{{ route('history.month') }}" class="{{ $base }} {{ $isActive(['history.*']) ? $active : $idle }}">
+  <svg class="h-5 w-5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h8M3 8h18M4 11h16M4 15h10M4 19h8"/>
+  </svg>
+  <span>الأرشيف (تقويم)</span>
+</a>
 
       <a href="{{ route('dashboard') }}"
          class="{{ $base }} {{ $isActive('dashboard') ? $active : $idle }}">
@@ -124,7 +131,11 @@
           d="M8 10h8M8 14h6M4 6h16v12H4z"/>
   </svg>
   <span>التعليقات</span>
+</a><a href="{{ route('stock.items.index') }}"
+   class="{{ $base }} {{ $isActive(['stock.items.*','stock.purchases.*','stock.adjustments.*','stock.movements.*']) ? $active : $idle }}">
+  📦 <span>إدارة المخزون</span>
 </a>
+
 
         <a href="{{ route('orders.index') }}"
    class="{{ $base }} {{ $isActive('orders.index') ? $active : $idle }}">

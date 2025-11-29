@@ -1,22 +1,23 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Services\Stock\ConsumeOrderStock;
+use App\Models\Ingredient;
+use App\Models\IngredientMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\MenuItem;
-use App\Models\Category;                 // ← NEW: load categories for tabs
+use App\Models\Category;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Notifications\OrderStatusConfirmedNotification;
+use App\Services\StockService;
 
 class OrderController extends Controller
 {
-    /**
-     * Waiter/Manager: show create screen (tabbed by categories).
-     */
     public function create()
     {
-        // Categories with only available items, nicely ordered
         $cats = Category::with(['items' => function ($q) {
                 $q->where('is_available', true)->orderBy('name');
             }])
@@ -26,9 +27,6 @@ class OrderController extends Controller
         return view('orders.create', compact('cats'));
     }
 
-    /**
-     * Persist new order.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -59,7 +57,7 @@ class OrderController extends Controller
                 'order_id'     => $order->id,
                 'menu_item_id' => $menu->id,
                 'quantity'     => (int) $row['quantity'],
-                'price'        => (float) $menu->price, // unit price snapshot
+                'price'        => (float) $menu->price,
             ]);
         }
 
@@ -68,9 +66,6 @@ class OrderController extends Controller
         return redirect()->route('orders.index')->with('ok', 'تم إنشاء الطلب بنجاح ✅');
     }
 
-    /**
-     * List orders (manager = all, waiter = own), sort by date asc/desc.
-     */
     public function index(Request $request)
     {
         $sort = $request->query('sort', 'desc');
@@ -87,9 +82,6 @@ class OrderController extends Controller
         return view('orders.index', compact('orders','sort'));
     }
 
-    /**
-     * Show one order.
-     */
     public function show(Order $order)
     {
         $this->authorizeView($order);
@@ -99,9 +91,6 @@ class OrderController extends Controller
         return view('orders.show', compact('order'));
     }
 
-    /**
-     * Edit order (status/table/notes only).
-     */
     public function edit(Order $order)
     {
         $this->authorizeUpdate($order);
@@ -109,10 +98,7 @@ class OrderController extends Controller
         return view('orders.edit', compact('order'));
     }
 
-    /**
-     * Update order (status/table/notes).
-     */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, Order $order, StockService $stock)
     {
         $this->authorizeUpdate($order);
 
@@ -122,14 +108,35 @@ class OrderController extends Controller
             'notes'        => ['nullable','string','max:1000'],
         ]);
 
+        $oldStatus = $order->status;
         $order->update($data);
+
+        $confirmationStates = ['PREPARING','READY'];
+        if ($oldStatus !== $order->status && in_array($order->status, $confirmationStates, true)) {
+            $managers = User::whereHas('roles', function($q){ $q->where('name','manager'); })->get();
+
+            foreach ($managers as $manager) {
+                $manager->notify(new OrderStatusConfirmedNotification(
+                    orderId: $order->id,
+                    tableNumber: $order->table_number,
+                    total: (float) ($order->total ?? 0),
+                    newStatus: $order->status,
+                    changedByUserId: auth()->id() ?? 0
+                ));
+            }
+        }
+
+        if ($oldStatus !== 'PREPARING' && $order->status === 'PREPARING' && !$order->stock_consumed) {
+            $stock->consumeForOrder($order, auth()->id());
+        }
+
+        if ($order->status === 'CANCELLED' && $order->stock_consumed) {
+            $stock->restockForOrder($order, auth()->id());
+        }
 
         return redirect()->route('orders.show', $order)->with('ok', 'تم تحديث الطلب ✅');
     }
 
-    /**
-     * Delete order.
-     */
     public function destroy(Order $order)
     {
         $this->authorizeDelete($order);
@@ -139,8 +146,6 @@ class OrderController extends Controller
 
         return redirect()->route('orders.index')->with('ok', 'تم حذف الطلب 🗑️');
     }
-
-    // ---------------- Authorization helpers ----------------
 
     private function authorizeView(Order $order): void
     {

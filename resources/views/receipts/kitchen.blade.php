@@ -1,37 +1,102 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="fr">
 <head>
-<meta charset="utf-8">
-<style>
-  body{font-family: DejaVu Sans, system-ui; font-size:12px; color:#111;}
-  table{width:100%; border-collapse:collapse; margin-top:8px}
-  th,td{border-bottom:1px dashed #ccc; padding:6px 4px; text-align:right}
-</style>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: DejaVu Sans, system-ui;
+      font-size: 12px;
+      color: #111;
+      margin: 0;
+      padding: 10px;
+      line-height: 1.5;
+    }
+    .ticket {
+      width: 80mm;
+      margin: auto;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 6px;
+      border-bottom: 1px dashed #999;
+      padding-bottom: 4px;
+    }
+    .meta {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th {
+      font-size: 11px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    td {
+      padding: 6px 4px;
+      border-bottom: 1px dashed #ccc;
+      vertical-align: top;
+    }
+    td.qty {
+      font-weight: bold;
+      text-align: right;
+      width: 30px;
+    }
+    .notes {
+      margin-top: 10px;
+      font-size: 12px;
+      background: #f9f9f9;
+      padding: 6px;
+      border-left: 3px solid #ccc;
+    }
+  </style>
 </head>
 <body>
-  <div style="font-weight:700; margin-bottom:6px">تذكرة المطبخ/البار — طلب #{{ $order->id }}</div>
-  <div class="small" style="opacity:.7">
-    التاريخ: {{ $order->created_at->format('Y-m-d H:i') }} —
-    النادل: {{ optional($order->waiter)->name ?? '—' }}
-    @if($order->table_number) — الطاولة: {{ $order->table_number }} @endif
-  </div>
+  <div class="ticket">
+    <!-- Header -->
+    <div class="title">Ticket Cuisine / Bar — Commande #{{ $order->id }}</div>
 
-  <table>
-    <thead>
-      <tr><th>الصنف</th><th>الكمية</th></tr>
-    </thead>
-    <tbody>
-      @foreach($order->items as $it)
+    <!-- Metadata -->
+    <div class="meta">
+      Date : {{ $order->created_at->format('d/m/Y H:i') }}<br>
+      Serveur : {{ optional($order->waiter)->name ?? '—' }}
+      @if($order->table_number)
+        — Table : {{ $order->table_number }}
+      @endif
+    </div>
+
+    <!-- Items -->
+    <table>
+      <thead>
         <tr>
-          <td>{{ optional($it->menuItem)->name }}</td>
-          <td style="font-weight:700">{{ $it->quantity }}</td>
+          <th>Article</th>
+          <th>Qté</th>
         </tr>
-      @endforeach
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @foreach($order->items as $it)
+          <tr>
+            <td>{{ optional($it->menuItem)->name ?? '—' }}</td>
+            <td class="qty">{{ $it->quantity }}</td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
 
-  @if($order->notes)
-  <p style="margin-top:10px"><strong>ملاحظات:</strong> {{ $order->notes }}</p>
-  @endif
+    <!-- Notes -->
+    @if($order->notes)
+      <div class="notes">
+        <strong>Remarques :</strong> {{ $order->notes }}
+      </div>
+    @endif
+  </div>
 </body>
 </html>

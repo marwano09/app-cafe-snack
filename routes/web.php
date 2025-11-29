@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\HistoryController;
 // Controllers
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CategoryController;
@@ -12,13 +12,50 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockMovementController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-*/
+*/use App\Http\Controllers\ManagerNotificationController;
 
+// routes/web.php (inside auth + manager middleware)
+Route::prefix('stock')->name('stock.')->middleware(['auth','role:manager'])->group(function () {
+    Route::resource('items', \App\Http\Controllers\StockItemController::class)->except(['show']);
+    Route::get('purchases/create', [\App\Http\Controllers\StockPurchaseController::class,'create'])->name('purchases.create');
+    Route::post('purchases', [\App\Http\Controllers\StockPurchaseController::class,'store'])->name('purchases.store');
+    Route::get('adjustments/create', [\App\Http\Controllers\StockAdjustmentController::class,'create'])->name('adjustments.create');
+    Route::post('adjustments', [\App\Http\Controllers\StockAdjustmentController::class,'store'])->name('adjustments.store');
+    Route::get('movements', [\App\Http\Controllers\StockMovementController::class,'index'])->name('movements.index');
+});
+
+// …
+Route::middleware(['auth','role:manager'])->group(function () {
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::post('/stock/{stock}/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+    Route::get('/stock/movements', [StockMovementController::class, 'index'])->name('stock.movements');
+});
+
+Route::get('/manager/notifications', [ManagerNotificationController::class, 'index'])
+    ->middleware('role:manager')
+    ->name('manager.notifications.index');
+Route::get('/kitchen', [\App\Http\Controllers\KitchenController::class, 'index'])
+    ->middleware('role:kitchen|bar|manager')
+    ->name('kitchen.index');
+
+Route::patch('/orders/{order}/status', [\App\Http\Controllers\KitchenController::class, 'status'])
+    ->middleware('role:kitchen|bar|manager')
+    ->name('orders.status');
+
+Route::get('/manager/notifications/{id}/read', [ManagerNotificationController::class, 'read'])
+    ->middleware('role:manager')
+    ->name('manager.notifications.read');
+
+Route::get('/history',                 [HistoryController::class,'month'])->name('history.month');          // current month
+Route::get('/history/{year}',          [HistoryController::class,'year'])->name('history.year');            // year summary
+Route::get('/history/{year}/{month}',  [HistoryController::class,'month'])->name('history.month.view');     // month calendar
+Route::get('/history/{year}/{month}/{day}', [HistoryController::class,'day'])->name('history.day'); 
 // Redirect root to dashboard
 Route::get('/', fn () => redirect()->route('dashboard'));
 
